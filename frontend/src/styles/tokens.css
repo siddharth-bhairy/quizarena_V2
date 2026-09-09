@@ -1,0 +1,53 @@
+:root {
+  /* ---------- Color: given palette — charcoal / wine / plum / off-white ----------
+     #2C2C2C · #853953 · #612D53 · #F3F4F4
+     A quieter, more muted register than the earlier palettes — back to a
+     light canvas, with the two accent hues (wine, plum) carrying the same
+     fire/ocean category split as before. */
+
+  --bg: #f3f4f4;                /* off-white canvas */
+  --bg-deep: #2c2c2c;            /* charcoal — header/nav bands */
+  --bg-deep-hover: #3a3a3a;
+
+  --surface: #ffffff;            /* cards sit crisp white on the off-white canvas */
+  --surface-muted: #e7e8e8;       /* secondary surface, one step down from bg */
+
+  --border: rgba(44, 44, 44, 0.16);
+  --border-strong: #2c2c2c;
+
+  --ink: #2c2c2c;                 /* primary text — charcoal, not pure black */
+  --ink-muted: rgba(44, 44, 44, 0.62);
+  --ink-faint: rgba(44, 44, 44, 0.42);
+
+  --on-deep: #f3f4f4;
+  --on-deep-muted: rgba(243, 244, 244, 0.7);
+
+  /* Fire = Math */
+  --fire: #853953;
+  --fire-deep: #601f39;
+  --fire-hover: #9c4761;
+
+  /* Ocean = Geography */
+  --ocean: #612d53;
+  --ocean-deep: #46203c;
+  --ocean-hover: #7a3a69;
+
+  --highlight: #b08d57;           /* muted brass — reserved for ratings/scores,
+                                      the one warm note against the wine/plum pair */
+
+  --success: #4c7a63;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Work Sans", -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  /* A little roundness, not the fully sharp poster edges from before */
+  --radius-xs: 6px;
+  --radius-sm: 9px;
+  --radius-md: 12px;
+  --radius-avatar: 10px;
+
+  --shadow-card: 0 3px 10px rgba(44, 44, 44, 0.1);
+}
+
+

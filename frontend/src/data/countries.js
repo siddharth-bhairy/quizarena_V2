@@ -1,0 +1,48 @@
+// Flags are served from flagcdn.com (free, no key required):
+// https://flagcdn.com/w320/{iso2}.png
+export const COUNTRIES = [
+  { code: "in", name: "India" },
+  { code: "us", name: "United States" },
+  { code: "jp", name: "Japan" },
+  { code: "fr", name: "France" },
+  { code: "de", name: "Germany" },
+  { code: "br", name: "Brazil" },
+  { code: "au", name: "Australia" },
+  { code: "ca", name: "Canada" },
+  { code: "cn", name: "China" },
+  { code: "gb", name: "United Kingdom" },
+  { code: "it", name: "Italy" },
+  { code: "es", name: "Spain" },
+  { code: "mx", name: "Mexico" },
+  { code: "za", name: "South Africa" },
+  { code: "eg", name: "Egypt" },
+  { code: "ru", name: "Russia" },
+  { code: "kr", name: "South Korea" },
+  { code: "ar", name: "Argentina" },
+  { code: "ng", name: "Nigeria" },
+  { code: "se", name: "Sweden" },
+  { code: "no", name: "Norway" },
+  { code: "ch", name: "Switzerland" },
+  { code: "nl", name: "Netherlands" },
+  { code: "pt", name: "Portugal" },
+  { code: "gr", name: "Greece" },
+  { code: "tr", name: "Turkey" },
+  { code: "sa", name: "Saudi Arabia" },
+  { code: "th", name: "Thailand" },
+  { code: "id", name: "Indonesia" },
+  { code: "vn", name: "Vietnam" },
+  { code: "ph", name: "Philippines" },
+  { code: "pk", name: "Pakistan" },
+  { code: "bd", name: "Bangladesh" },
+  { code: "ke", name: "Kenya" },
+  { code: "nz", name: "New Zealand" },
+  { code: "ie", name: "Ireland" },
+  { code: "pl", name: "Poland" },
+  { code: "ua", name: "Ukraine" },
+  { code: "sg", name: "Singapore" },
+  { code: "ae", name: "United Arab Emirates" },
+];
+
+export function flagUrl(code) {
+  return `https://flagcdn.com/w320/${code}.png`;
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>QuizArena Demo</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; background:#0f172a; color:#e2e8f0; }
+  h1 { color: #38bdf8; }
+  section { border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+  input, select, button { padding: 8px; margin: 4px 4px 4px 0; border-radius: 6px; border: 1px solid #475569; background:#1e293b; color:#e2e8f0; }
+  button { background:#38bdf8; color:#0f172a; font-weight:600; cursor:pointer; border:none; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .option { display:block; width:100%; text-align:left; margin:4px 0; }
+  .correct { background:#22c55e !important; }
+  .wrong { background:#ef4444 !important; }
+  pre { white-space: pre-wrap; font-size: 12px; background:#020617; padding:8px; border-radius:6px; }
+  #log { max-height: 160px; overflow:auto; }
+</style>
+</head>
+<body>
+
+<h1>QuizArena — Demo</h1>
+
+<section>
+  <h2>1. Account</h2>
+  <input id="username" placeholder="username" />
+  <input id="email" placeholder="email" />
+  <input id="password" type="password" placeholder="password" />
+  <br/>
+  <button onclick="signup()">Sign up</button>
+  <button onclick="login()">Log in</button>
+  <div id="authStatus">Not logged in</div>
+</section>
+
+<section>
+  <h2>2. Solo Play</h2>
+  <select id="category">
+    <option value="geography">Geography</option>
+    <option value="math">Math</option>
+  </select>
+  <button onclick="startSolo()">Start round</button>
+  <div id="soloQuiz"></div>
+</section>
+
+<section>
+  <h2>3. Multiplayer</h2>
+  <input id="roomId" placeholder="room id (share with a friend)" value="room1" />
+  <select id="mpCategory">
+    <option value="geography">Geography</option>
+    <option value="math">Math</option>
+  </select>
+  <button onclick="joinRoom()">Join room</button>
+  <button onclick="startRoom()">Start game (host)</button>
+  <div id="mpQuiz"></div>
+</section>
+
+<section>
+  <h2>4. Leaderboard</h2>
+  <button onclick="loadLeaderboard('geography')">Geography leaderboard</button>
+  <button onclick="loadLeaderboard('math')">Math leaderboard</button>
+  <pre id="leaderboard"></pre>
+</section>
+
+<section>
+  <h2>Log</h2>
+  <pre id="log"></pre>
+</section>
+
+<script>
+const API = ""; // same origin
+let token = null;
+let ws = null;
+
+function log(msg) {
+  const el = document.getElementById("log");
+  el.textContent = `${new Date().toLocaleTimeString()}  ${msg}\n` + el.textContent;
+}
+
+async function signup() {
+  const body = {
+    username: document.getElementById("username").value,
+    email: document.getElementById("email").value,
+    password: document.getElementById("password").value,
+  };
+  const res = await fetch(`${API}/auth/signup`, {
+    method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)
+  });
+  log(res.ok ? "Signed up. Now log in." : `Signup failed: ${await res.text()}`);
+}
+
+async function login() {
+  const form = new URLSearchParams();
+  form.append("username", document.getElementById("username").value);
+  form.append("password", document.getElementById("password").value);
+  const res = await fetch(`${API}/auth/login`, { method: "POST", body: form });
+  if (!res.ok) { log(`Login failed: ${await res.text()}`); return; }
+  const data = await res.json();
+  token = data.access_token;
+  document.getElementById("authStatus").textContent = "Logged in ✔";
+  log("Logged in.");
+}
+
+function authHeaders() {
+  return { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+}
+
+// ---------- Solo play ----------
+let currentQuestions = [];
+let currentCategory = "";
+
+async function startSolo() {
+  currentCategory = document.getElementById("category").value;
+  const res = await fetch(`${API}/game/start`, {
+    method: "POST", headers: authHeaders(),
+    body: JSON.stringify({ category: currentCategory, num_questions: 5 })
+  });
+  if (!res.ok) { log(`Start failed: ${await res.text()}`); return; }
+  const data = await res.json();
+  currentQuestions = data.questions;
+  renderSolo();
+}
+
+let soloAnswers = [];
+function renderSolo() {
+  soloAnswers = [];
+  const container = document.getElementById("soloQuiz");
+  container.innerHTML = "";
+  currentQuestions.forEach((q, qi) => {
+    const div = document.createElement("div");
+    div.innerHTML = `<p>${qi+1}. ${q.question_text}</p>`;
+    q.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.textContent = opt;
+      btn.onclick = () => { soloAnswers[qi] = { question_id: q.id, selected_index: oi }; btn.style.background = "#0ea5e9"; };
+      div.appendChild(btn);
+    });
+    container.appendChild(div);
+  });
+  const submitBtn = document.createElement("button");
+  submitBtn.textContent = "Submit round";
+  submitBtn.onclick = submitSolo;
+  container.appendChild(submitBtn);
+}
+
+async function submitSolo() {
+  const res = await fetch(`${API}/game/submit`, {
+    method: "POST", headers: authHeaders(),
+    body: JSON.stringify({ category: currentCategory, difficulty: "easy", answers: soloAnswers.filter(Boolean) })
+  });
+  const data = await res.json();
+  log(`Score: ${data.score} (${data.correct_count}/${data.total_questions} correct)`);
+}
+
+// ---------- Multiplayer ----------
+function joinRoom() {
+  if (!token) { log("Log in first."); return; }
+  const roomId = document.getElementById("roomId").value;
+  const category = document.getElementById("mpCategory").value;
+  ws = new WebSocket(`${location.origin.replace("http", "ws")}/ws/room/${roomId}?token=${token}&category=${category}`);
+  ws.onmessage = (evt) => {
+    const msg = JSON.parse(evt.data);
+    handleMpMessage(msg);
+  };
+  ws.onclose = () => log("Disconnected from room.");
+}
+
+function startRoom() {
+  if (ws) ws.send(JSON.stringify({ action: "start" }));
+}
+
+function handleMpMessage(msg) {
+  const container = document.getElementById("mpQuiz");
+  if (msg.type === "player_joined" || msg.type === "player_left") {
+    log(`Players in room: ${msg.players.join(", ")}`);
+  } else if (msg.type === "question") {
+    container.innerHTML = `<p>Q${msg.index+1}/${msg.total}: ${msg.text}</p>`;
+    msg.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.textContent = opt;
+      btn.onclick = () => { ws.send(JSON.stringify({ action: "answer", question_id: msg.question_id, selected_index: oi })); btn.style.background = "#0ea5e9"; };
+      container.appendChild(btn);
+    });
+  } else if (msg.type === "reveal") {
+    log(`Leaderboard: ${JSON.stringify(msg.leaderboard)}`);
+  } else if (msg.type === "game_over") {
+    container.innerHTML = "<p>Game over!</p>";
+    log(`Final leaderboard: ${JSON.stringify(msg.leaderboard)}`);
+  }
+}
+
+// ---------- Leaderboard ----------
+async function loadLeaderboard(category) {
+  const res = await fetch(`${API}/leaderboard/${category}`);
+  document.getElementById("leaderboard").textContent = JSON.stringify(await res.json(), null, 2);
+}
+</script>
+</body>
+</html>
