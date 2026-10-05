@@ -12,14 +12,7 @@ router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
 @router.get("/{category}", response_model=List[schemas.LeaderboardEntry])
 def get_leaderboard(category: str, db: Session = Depends(get_db), limit: int = 10):
-    """Best score per user for a category, highest first.
-
-    Aggregated in Python on purpose: an earlier version joined GameSession
-    back onto itself by (user_id, score) without also constraining on
-    category, so a Math score and a Geography score of the same value
-    could cross-match and leak into the wrong leaderboard. Grouping here
-    avoids that class of bug entirely.
-    """
+    """Total score per user for a category, highest first."""
     sessions = (
         db.query(models.GameSession, models.User.username)
         .join(models.User, models.User.id == models.GameSession.user_id)
@@ -28,15 +21,16 @@ def get_leaderboard(category: str, db: Session = Depends(get_db), limit: int = 1
         .all()
     )
 
-    best_by_user = {}
+    totals = {}
+    last_played = {}
     for session, username in sessions:
-        current = best_by_user.get(username)
-        if current is None or session.score > current.score:
-            best_by_user[username] = session
+        totals[username] = totals.get(username, 0) + session.score
+        if username not in last_played or session.played_at > last_played[username]:
+            last_played[username] = session.played_at
 
-    ranked = sorted(best_by_user.items(), key=lambda kv: kv[1].score, reverse=True)[:limit]
+    ranked = sorted(totals.items(), key=lambda kv: kv[1], reverse=True)[:limit]
 
     return [
-        schemas.LeaderboardEntry(username=username, best_score=session.score, played_at=session.played_at)
-        for username, session in ranked
+        schemas.LeaderboardEntry(username=username, best_score=total, played_at=last_played[username])
+        for username, total in ranked
     ]
