@@ -5,7 +5,7 @@ const ICONS = {
   logic: "🧩",
 };
 
-export default function CategoryTile({ id, label, sub, rating, active, disabled, onClick, accent }) {
+export default function CategoryTile({ id, label, sub, active, disabled, onClick, accent }) {
   return (
     <button
       className="cat-row"
@@ -20,16 +20,6 @@ export default function CategoryTile({ id, label, sub, rating, active, disabled,
         </span>
         <div className="cat-row-sub">{sub}</div>
       </span>
-      {disabled ? (
-        <span className="cat-row-rating-label">Soon</span>
-      ) : (
-        <span>
-          <div className="cat-row-rating" style={{ color: accent }}>
-            {rating ?? "—"}
-          </div>
-          <div className="cat-row-rating-label">Rating</div>
-        </span>
-      )}
     </button>
   );
 }

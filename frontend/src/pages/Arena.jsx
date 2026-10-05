@@ -16,25 +16,14 @@ export default function Arena() {
   const { username, token } = useAuth();
   const navigate = useNavigate();
   const [active, setActive] = useState("math");
-  const [ratings, setRatings] = useState({});
   const [avatar, setAvatar] = useState(null);
 
   useEffect(() => {
-    ["math", "geography"].forEach(async (cat) => {
-      try {
-        const board = await api.leaderboard(cat);
-        const mine = board.find((row) => row.username === username);
-        setRatings((prev) => ({ ...prev, [cat]: 1000 + (mine ? mine.best_score * 3 : 0) }));
-      } catch {
-        setRatings((prev) => ({ ...prev, [cat]: 1000 }));
-      }
-    });
-
     api
       .getMe(token)
       .then((me) => setAvatar(me.avatar_base64))
       .catch(() => {});
-  }, [username, token]);
+  }, [token]);
 
   return (
     <>
@@ -56,7 +45,6 @@ export default function Arena() {
               label={cat.label}
               sub={cat.sub}
               accent={cat.accent}
-              rating={ratings[cat.id]}
               active={active === cat.id}
               disabled={cat.disabled}
               onClick={() => setActive(cat.id)}
