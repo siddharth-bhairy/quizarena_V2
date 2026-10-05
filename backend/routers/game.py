@@ -22,7 +22,11 @@ def _pick_difficulty(db: Session, user_id: int, category: str) -> str:
     they've been struggling."""
     recent = (
         db.query(models.GameSession)
-        .filter(models.GameSession.user_id == user_id, models.GameSession.category == category)
+        .filter(
+            models.GameSession.user_id == user_id,
+            models.GameSession.category == category,
+            models.GameSession.difficulty.in_(DIFFICULTY_ORDER),
+        )
         .order_by(models.GameSession.played_at.desc())
         .limit(5)
         .all()
