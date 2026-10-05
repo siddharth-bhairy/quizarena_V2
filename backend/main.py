@@ -21,9 +21,10 @@ app = FastAPI(title="QuizArena API", version="0.1.0", lifespan=lifespan)
 # Demo-only: wide-open CORS so the static frontend can call the API from
 # any origin. Lock this down to your real frontend domain before sharing
 # the link with anyone outside your demo audience.
+# backend/main.py
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://quizarena-v2.vercel.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
